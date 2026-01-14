@@ -197,6 +197,7 @@
                             
                         })();
                         document.querySelectorAll('div#folderTmp').forEach(function(divFolder) {
+                            const circle = document.querySelector('#progressGenerator');
                             const divFile = divFolder.querySelector(':scope > div[data-gen-cur]');
                             if(!divFile) {
                                 //wait
@@ -206,19 +207,25 @@
                                 if(newCount != 0) {
                                     // wait.
                                     divFolder.setAttribute('data-wait-count', newCount);
+                                    setRingProgress(circle, (max - newCount) / max);
                                 } else {
                                     // start generate.
                                     const newNode = document.querySelector('div#file-obj-template').cloneNode(true);
                                     const max = 4000 + (Math.random() * 2000);
+                                    const nextIndex = document.querySelector('div#folderTmp').querySelectorAll(':scope > div.fileObject').length;
+                                    const [tgtX, tgtY] = getPosition(nextIndex);
                                     newNode.removeAttribute('id');
                                     newNode.setAttribute('data-gen-cur', 'data-gen-cur');
                                     newNode.setAttribute('data-type', 'normal');
                                     newNode.setAttribute('data-gen-count', max);
                                     newNode.setAttribute('data-gen-max', max);
                                     newNode.classList.add('fileObject');
+                                    newNode.style.top = tgtY + 50;
+                                    newNode.style.left = tgtX;
                                     divFolder.appendChild(newNode);
                                     divFolder.removeAttribute('data-gen-max');
                                     divFolder.removeAttribute('data-gen-count');
+                                    setRingProgress(circle, 0);
                                     massageGeneratorLog(`start generate ${timestamp}`);
                                 }
                             } else {
@@ -229,6 +236,9 @@
                                 if(newCount != 0) {
                                     // wait.
                                     divFile.setAttribute('data-gen-count', newCount);
+                                    divFile.querySelectorAll('circle.indicator').forEach(function(fileCircle) {
+                                        setRingProgress(fileCircle, (max - newCount) / max);
+                                    });
                                 } else {
                                     const max = 4000 + (Math.random() * 2000);
                                     divFile.removeAttribute('data-gen-cur');
@@ -236,6 +246,7 @@
                                     divFile.removeAttribute('data-gen-max');
                                     divFolder.setAttribute('data-wait-count', max);
                                     divFolder.setAttribute('data-wait-max', max);
+                                    setRingProgress(circle, 0);
                                 }
                             }
                         });
@@ -282,9 +293,6 @@
                         const MAX_COUNT = 500;
                         document.querySelectorAll('div.fileContainer').forEach(function(divContainer) {
                             divContainer.querySelectorAll('div.fileObject').forEach(function(divFile, index) {
-                                const i = Math.floor(index % 2);
-                                const j = Math.floor(index / 2);
-
                                 const count = divFile.getAttribute('data-count');
                                 if(divFile.getAttribute('data-count') !== 0) {
                                     const isSame = ((divFile.getAttribute('data-index') || -1) == index);
@@ -293,8 +301,7 @@
                                     const startPosY = getValue(divFile.getAttribute('data-start-pos-y'), divFile.offsetTop, !isSame);
                                     const nextCount = Math.max(curCount - delta, 0);
 
-                                    const tgtX = i * 100;
-                                    const tgtY = j * 100;
+                                    const [tgtX, tgtY] = getPosition(index);
 
                                     const top = tgtY - ((tgtY - startPosY) * curCount / MAX_COUNT);
                                     const left = tgtX - ((tgtX - startPosX) * curCount / MAX_COUNT);
@@ -340,7 +347,6 @@
                     massageToTextarea('logSettings', str);
                 }
 
-
                 /**
                  * @param a
                  * @param b
@@ -356,6 +362,16 @@
                     } else {
                         return b;
                     }
+                }
+
+                /**
+                 * @param index
+                 * @return [x, y]
+                 */
+                function getPosition(index) {
+                    const i = Math.floor(index % 2);
+                    const j = Math.floor(index / 2);
+                    return [i * 100, j * 100];
                 }
 
                 /**
