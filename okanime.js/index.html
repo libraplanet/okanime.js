@@ -1,0 +1,407 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>okanime.js</title>
+        <style type="text/css">
+            div#root {
+            }
+            div#warp {
+                /*max-width:1000px;*/
+                width:1000px;
+                margin-left:auto;
+                margin-right:auto;
+            }
+            section {
+                padding-bottom: 10px;
+            }
+            div.areaGritWarp {
+                display: grid;
+                column-gap: 10px;
+                grid-template-columns: repeat(3, 1fr);
+            }
+            div.area {
+                border-width: 1px;
+                border-color: #666666;
+                border-style: solid;
+                border-radius: 10px;
+                padding: 10px;
+            }
+            div.area div.title {
+                text-align: center;
+                border-bottom-width: 1px;
+                border-bottom-color: #666666;
+                border-bottom-style: solid;
+                padding: 5px;
+                margin-bottom: 5px;
+
+                font-weight: 600;
+                font-size: 1.5em;
+            }
+            div.area div.content {
+                padding: 5px;
+                margin-bottom: 5px;
+            }
+            div.area div.log {
+                padding: 5px;
+                margin-bottom: 5px;
+            }
+            button {
+                text-align: center;
+                border-radius: 5px;
+                border: none;
+                font-weight: 600;
+                font-size: 1.0em;
+                padding: 10px;
+                cursor: pointer;
+            }
+            button.type1 {
+                color: #FFFFFF;
+                background-color: #00B000;
+            }
+            button.type2 {
+                color: #FFFFFF;
+                background-color: #B00000;
+            }
+            button.type3 {
+                color: #FFFFFF;
+                background-color: #A0A0A0;
+            }
+            .texarea {
+                height: 6em;
+                border-width: 1px;
+                border-color: #666666;
+                border-style: solid;
+                overflow: scroll;
+                color: #A0A0A0;
+                padding: 5px;
+            }
+            div.fileContainer {
+                position: relative;
+                height: 500px;
+            }
+            div.fileContainer div.fileObject {
+                position: absolute;
+            }
+        </style>
+        <script type="text/javascript">
+
+            /**
+             * Animator (class like)
+             */
+            function Animator(callback) {
+                const self = this;
+                let requestId = null;
+
+                /**
+                 * get request id
+                 * @return requestId
+                 */
+                self.getRequestId = () => requestId;
+
+                /**
+                 * start tick.
+                 */
+                self.start = function() {
+                    if(!requestId) {
+                        let lastTimestamp = null;
+                        requestId = requestAnimationFrame(tick);
+                        if(self.onTickStarted) {
+                            self.onTickStarted(requestId);
+                        }
+                        function tick(timestamp) {
+                            const elapsed = timestamp - (lastTimestamp || timestamp);
+                            lastTimestamp= timestamp;
+                            if(self.onTickEvent) {
+                                self.onTickEvent(timestamp, elapsed, requestId);
+                            }
+                            requestId = requestAnimationFrame(tick);
+                        }
+                    }
+                }
+                /**
+                 * stop tick.
+                 */
+                self.stop = function() {
+                    if(requestId) {
+                        cancelAnimationFrame(requestId);
+                        requestId = null;
+                    }
+                }
+            }
+
+            /**
+             * 日時文字列 
+             */
+            function dateString() {
+                return new Date().toLocaleString(undefined, {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'});
+            }
+
+            // 初期化
+            window.addEventListener('load', function() {
+                let isPaused = false;
+                // settings
+                (function() {
+                    document.querySelector('#buttonStart').addEventListener('click', function() {
+                        massageLog('clicked start button.');
+                        isPaused = false;
+                    })
+                    document.querySelector('#buttonStop').addEventListener('click', function() {
+                        massageLog('clicked stop button.');
+                        isPaused = true;
+                    })
+                    document.querySelector('#buttonReset').addEventListener('click', function() {
+                        massageLog('clicked reset button.');
+                    })
+                })();
+
+                /**
+                 * update. (instance)
+                 * @param delta milisec
+                 * @param time performance.now()
+                 */
+                const update = function(delta, time) {
+                    const deltaSec = delta / 1000;
+                    // massageLog(`tick. time = ${time}, delta = ${delta}`);
+
+                    // generator
+                    (function() {
+                        
+                    })();
+
+                    // projector
+                    (function() {
+                        const circle = document.querySelector('#progressProjector');
+                        if(circle) {
+                            const count = Number(circle.getAttribute('data-count')) || 0;
+                            if(count) {
+                                const max = Number(circle.getAttribute('data-max')) || count;
+                                const newCount = Math.max(count - delta, 0);
+                                setRingProgress(circle, (max - newCount) / max);
+                                circle.setAttribute('data-count', newCount);
+                                if(newCount == 0) {
+                                    massageLog('projection!');
+                                }
+                            } else {
+                                const max = 4000 + (Math.random() * 2000);
+                                setRingProgress(circle, 0);
+                                circle.setAttribute('data-count', max);
+                                circle.setAttribute('data-max', max);
+                            }
+                        }
+                    })();
+
+                    // file object
+                    (function() {
+                        const MAX_COUNT = 500;
+                        document.querySelectorAll('div.fileContainer').forEach(function(divContainer) {
+                            divContainer.querySelectorAll('div.fileObject').forEach(function(divFile, index) {
+                                const i = Math.floor(index % 2);
+                                const j = Math.floor(index / 2);
+
+                                const count = divFile.getAttribute('data-count');
+                                if(divFile.getAttribute('data-count') !== 0) {
+                                    const getValue = (a, b, isForce) => {
+                                        if(isForce) {
+                                            return b
+                                        } else if(a) {
+                                            return a;
+                                        } else if(a == 0) {
+                                            return a;
+                                        } else {
+                                            return b;
+                                        }
+                                    };
+                                    const isSame = ((divFile.getAttribute('data-index') || -1) == index);
+                                    const curCount = isSame ? count : MAX_COUNT;
+                                    const startPosX = getValue(divFile.getAttribute('data-start-pos-x'), divFile.offsetLeft, !isSame);
+                                    const startPosY = getValue(divFile.getAttribute('data-start-pos-y'), divFile.offsetTop, !isSame);
+                                    const nextCount = Math.max(curCount - delta, 0);
+
+                                    const tgtX = i * 100;
+                                    const tgtY = j * 100;
+
+                                    const top = tgtY - ((tgtY - startPosY) * curCount / MAX_COUNT);
+                                    const left = tgtX - ((tgtX - startPosX) * curCount / MAX_COUNT);
+
+                                    divFile.style.top = top;
+                                    divFile.style.left = left;
+                                    divFile.setAttribute('data-index', index);
+                                    divFile.setAttribute('data-count', nextCount);
+                                    if(nextCount) {
+                                        divFile.setAttribute('data-start-pos-x', startPosX);
+                                        divFile.setAttribute('data-start-pos-y', startPosY);
+                                    } else {
+                                        divFile.removeAttribute('data-start-pos-x');
+                                        divFile.removeAttribute('data-start-pos-y');
+                                    }
+                                }
+                            });
+                        });
+                    })();
+                };
+
+
+                // start
+                (function(){
+                    let lastTime = 0;
+                    requestAnimationFrame(mainloop);
+                
+                    function mainloop(time) {
+                        const MAX_DELTA = 100;
+                        const delta = Math.min(time - lastTime, MAX_DELTA);
+                        if(!isPaused) {
+                            update(delta, time);
+                        }
+                        requestAnimationFrame(mainloop);
+                        lastTime = time;
+                    }
+                })();
+
+                /**
+                 * @param str
+                 */
+                function massageLog(str) {
+                    const timestamp = dateString();
+                    document.querySelectorAll('#logSettings').forEach(function(logarea) {
+                        const div = document.createElement('div');
+                        div.textContent = `[${timestamp}] ${str}`;
+                        while(logarea.childNodes.length >= 100) {
+                            logarea.childNodes[logarea.childNodes.length - 1].remove();
+                        }
+                        logarea.prepend(div);
+                    });
+                }
+
+                /**
+                 * ring progress
+                 * @param circle
+                 * @param v
+                 */
+                function setRingProgress(circle, v) {
+                    const radius = circle.r.baseVal.value;
+                    const circumference = 2 * Math.PI * radius; // 外周：約339.29
+                    const offset = circumference - (v * circumference);
+                    circle.style.strokeDashoffset = offset;
+                }
+
+            });
+        </script>
+    </head>
+    <body>
+        <div id="root">
+            <div id="warp">
+                <section>
+                    <div style="text-align: center;">
+                        <h1>okanime.js</h1>
+                    </div>
+                </section>
+                <section>
+                    <div class="area">
+                        <div class="title">
+                            <span>settings</span>
+                        </div>
+                        <div class="content">
+                            <div>
+                                <button id="buttonStart" class="type1">START</button>
+                                <button id="buttonStop" class="type2">STOP</button>
+                                <button id="buttonReset"class="type3">RESET</button>
+                            </div>
+                        </div>
+                        <div class="log">
+                            <div id="logSettings" class="texarea"></div>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <div class="areaGritWarp">
+                        <div class="area">
+                            <div style="position:absolute">
+                                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="32" height="32" viewBox="0 0 120 120">
+                                  <circle cx="60" cy="60" r="50" fill="none" stroke="#D0D0D0" stroke-width="16" />
+                                  <circle id="progressGenerator" cx="60" cy="60" r="50" fill="none" stroke="#3b82f6" stroke-width="16"
+                                    stroke-dasharray="314.159" stroke-dashoffset="314.159" stroke-linecap="square" transform="rotate(-90 60 60)" />
+                                </svg>
+                            </div>
+                            <div class="title">
+                                <span>📁tmp</span>
+                            </div>
+                            <div class="log">
+                                <div class="texarea"></div>
+                            </div>
+                            <div class="content">
+                                <div class="fileContainer">
+                                    <div class="fileObject">🗄️
+                                       <svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 100 100" fill="#E0E0FF" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter">
+                                         <path d="M14 2H4v20h16V8l-6-6z"></path>
+                                         <polyline points="14 2 14 8 20 8"></polyline>
+                                       </svg>
+                                    </div>
+                                    <div class="fileObject">
+                                        <svg  xmlns="http://www.w3.org/2000/svg" width="160" height="200" viewBox="0 0 160 200" role="img" aria-label="File icon">
+                                          <rect x="10" y="10" width="140" height="180" rx="12" ry="12" fill="#f5f7fa" stroke="#c0c6d0" stroke-width="2" />
+                                          <path d="M110 10 L150 50 L150 10 Z" fill="#e1e6ef" stroke="#c0c6d0" stroke-width="2" />
+                                          <text x="80" y="55" text-anchor="middle" font-size="14" font-weight="bold" fill="#333" font-family="system-ui, sans-serif">
+                                            20260114_042952.bin
+                                          </text>
+                                          <line x1="30" y1="70" x2="130" y2="70" stroke="#d0d6e0" stroke-width="1" />
+                                          <text x="30" y="95" font-size="12" fill="#555" font-family="system-ui, sans-serif">
+                                            <tspan x="30" dy="0">This is a file</tspan>
+                                            <tspan x="30" dy="1.4em">icon-style SVG.</tspan>
+                                            <tspan x="30" dy="1.4em">Editable text.</tspan>
+                                          </text>
+                                        </svg>
+                                    </div>
+                                    <div class="fileObject">🗄️</div>
+                                    <div class="fileObject">🗄️</div>
+                                    <div class="fileObject">🗄️</div>
+                                    <div class="fileObject">🗄️</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="area">
+                            <div class="title">
+                                <span>📁upload</span>
+                            </div>
+                            <div class="log">
+                                <div class="texarea"></div>
+                            </div>
+                            <div class="content">
+                                <div class="fileContainer">
+                                    <div class="fileObject">🗄️</div>
+                                    <div class="fileObject">🗄️</div>
+                                    <div class="fileObject">🗄️</div>
+                                    <div class="fileObject">🗄️</div>
+                                    <div class="fileObject">🗄️</div>
+                                    <div class="fileObject">🗄️</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="area">
+                            <div style="position:absolute">
+                                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="32" height="32" viewBox="0 0 120 120">
+                                  <circle cx="60" cy="60" r="50" fill="none" stroke="#D0D0D0" stroke-width="16" />
+                                  <circle id="progressProjector" cx="60" cy="60" r="50" fill="none" stroke="#3b82f6" stroke-width="16"
+                                    stroke-dasharray="314.159" stroke-dashoffset="314.159" stroke-linecap="square" transform="rotate(-90 60 60)" />
+                                </svg>
+                            </div>
+                            <div class="title">
+                                <span>🎦projection</span>
+                            </div>
+                            <div class="log">
+                                <div class="texarea"></div>
+                            </div>
+                            <div class="content">
+                                <div>
+                                    <div>🗄️</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <div style="height:1000px;">
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

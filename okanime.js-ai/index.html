@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OK File Animation</title>
+    <style>
+        :root {
+            --speed-multiplier: 1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 1000px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* --- Settings Pane --- */
+        .settings-pane {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .control-group label {
+            font-weight: 600;
+            user-select: none;
+        }
+        input[type="range"] {
+            width: 150px;
+        }
+        #speed-value {
+            font-weight: bold;
+            min-width: 30px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #start-btn { background-color: #28a745; }
+        #start-btn:hover { background-color: #218838; }
+        #stop-btn { background-color: #dc3545; }
+        #stop-btn:hover { background-color: #c82333; }
+        #reset-btn { background-color: #6c757d; }
+        #reset-btn:hover { background-color: #5a6268; }
+
+        /* --- Animation Pane --- */
+        .animation-pane {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .area {
+            flex: 1;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 350px;
+            position: relative;
+        }
+        .area-title {
+            text-align: center;
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(3, auto);
+            gap: 15px;
+        }
+        .file-container {
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             height: calc(100% - 50px);
+        }
+
+
+        /* --- File Icon --- */
+        .file-icon {
+            position: relative;
+            width: 100px;
+            height: 120px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.5s, opacity 0.5s;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+        .file-icon.bin { background-color: #e6ffed; border: 1px solid #b7e4c7; }
+        .file-icon.ok { background-color: #f3e8ff; border: 1px solid #d8b4fe; }
+
+        .file-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            border-width: 0 16px 16px 0;
+            border-style: solid;
+            border-color: #ffffff #f0f2f5;
+            border-radius: 0 0 0 6px;
+        }
+
+        .file-name {
+            font-size: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 2px 4px;
+            border-radius: 3px;
+            word-break: break-all;
+            text-align: center;
+        }
+        
+        .file-icon.moving {
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- Indicators --- */
+        .progress-ring, .wait-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+        }
+        .progress-ring-circle, .wait-indicator-circle {
+            fill: none;
+            stroke-width: 6;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .progress-ring-bg {
+            stroke: #e6e6e6;
+        }
+        .progress-ring-fg {
+            stroke: #007bff;
+            stroke-dasharray: 169.65;
+            stroke-dashoffset: 169.65; /* 2 * PI * 27 */
+            transition: stroke-dashoffset 0.1s linear;
+        }
+        
+        .wait-indicator {
+            animation: spin calc(2s / var(--speed-multiplier)) linear infinite;
+        }
+        .wait-indicator-circle {
+             stroke: #6c757d;
+             stroke-linecap: round;
+             stroke-dasharray: 80 170; /* Creates a gap */
+        }
+        .display .wait-indicator {
+            width: 80px;
+            height: 80px;
+        }
+        .display .wait-indicator-circle {
+             stroke: #28a745;
+             stroke-dasharray: 120 252; /* 2 * PI * 40 */
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="settings-pane">
+        <div class="control-group">
+            <input type="checkbox" id="ok-file-checkbox">
+            <label for="ok-file-checkbox">OKファイル</label>
+        </div>
+        <div class="control-group">
+            <label for="speed-slider">アニメーション速度:</label>
+            <input type="range" id="speed-slider" min="0" max="5" step="0.1" value="1.0">
+            <span id="speed-value">1.0x</span>
+        </div>
+        <div class="buttons">
+            <button id="start-btn">開始</button>
+            <button id="stop-btn">停止</button>
+            <button id="reset-btn">リセット</button>
+        </div>
+    </div>
+
+    <div class="animation-pane">
+        <div class="area" id="temp-area">
+            <h2 class="area-title">temp (送信元)</h2>
+            <div class="file-grid" id="temp-grid"></div>
+        </div>
+        <div class="area" id="upload-area">
+            <h2 class="area-title">upload (送信先)</h2>
+            <div class="file-grid" id="upload-grid"></div>
+        </div>
+        <div class="area" id="display-area">
+            <h2 class="area-title">display (投影先)</h2>
+            <div class="file-container" id="display-container"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM Elements ---
+    const okFileCheckbox = document.getElementById('ok-file-checkbox');
+    const speedSlider = document.getElementById('speed-slider');
+    const speedValue = document.getElementById('speed-value');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const tempGrid = document.getElementById('temp-grid');
+    const uploadGrid = document.getElementById('upload-grid');
+    const displayContainer = document.getElementById('display-container');
+    const tempArea = document.getElementById('temp-area');
+    const displayArea = document.getElementById('display-area');
+
+    // --- State ---
+    let state = {
+        isOkFileEnabled: false,
+        animationSpeed: 1.0,
+        isRunning: false,
+        files: {
+            temp: [],
+            upload: [],
+            display: null
+        },
+        jobTimers: {
+            generator: null,
+            projector: null
+        },
+        waitIndicators: {
+             generator: null,
+             projector: null
+        }
+    };
+
+    // --- Utility Functions ---
+    const getSpeed = () => state.animationSpeed;
+    const getRandomTime = (min, max) => (Math.random() * (max - min) + min) * 1000 / getSpeed();
+
+    const createFileName = () => {
+        const d = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.bin`;
+    };
+
+    // --- UI Update Functions ---
+    const createFileIcon = (file) => {
+        const icon = document.createElement('div');
+        icon.id = file.id;
+        icon.className = `file-icon ${file.type}`;
+        
+        const name = document.createElement('div');
+        name.className = 'file-name';
+        name.textContent = file.name.split('.')[0].replace('_', '\n');
+        
+        icon.appendChild(name);
+        return icon;
+    };
+
+    const createProgressRing = () => {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'progress-ring');
+        svg.innerHTML = `
+            <circle class="progress-ring-bg" cx="30" cy="30" r="27"></circle>
+            <circle class="progress-ring-fg" cx="30" cy="30" r="27"></circle>
+        `;
+        return svg;
+    };
+
+    const updateProgress = (icon, progress) => {
+        const ring = icon.querySelector('.progress-ring-fg');
+        if (ring) {
+            const circumference = 2 * Math.PI * 27;
+            const offset = circumference - (progress / 100) * circumference;
+            ring.style.strokeDashoffset = offset;
+        }
+        icon.style.opacity = 0.3 + 0.7 * progress / 100;
+    };
+    
+    const createWaitIndicator = (isDisplay = false) => {
+        const indicator = document.createElement('div');
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'wait-indicator');
+        svg.innerHTML = `<circle class="wait-indicator-circle" cx="50%" cy="50%" r="${isDisplay ? 40 : 27}"></circle>`;
+        return svg;
+    }
+
+    const render = () => {
+        // Render temp
+        tempGrid.innerHTML = '';
+        state.files.temp.forEach(file => tempGrid.appendChild(createFileIcon(file)));
+
+        // Render upload
+        uploadGrid.innerHTML = '';
+        state.files.upload.forEach(file => {
+             const icon = createFileIcon(file);
+             if (file.isCopying) {
+                 const ring = createProgressRing();
+                 icon.appendChild(ring);
+                 updateProgress(icon, file.progress);
+             }
+             uploadGrid.appendChild(icon);
+        });
+
+        // Render display
+        displayContainer.innerHTML = '';
+        if(state.waitIndicators.projector) displayContainer.appendChild(state.waitIndicators.projector);
+        if (state.files.display) {
+            displayContainer.appendChild(createFileIcon(state.files.display));
+        }
+    };
+    
+    const animateFileMove = (grid, onComplete) => {
+        const children = Array.from(grid.children);
+        let completedAnimations = 0;
+        
+        if (children.length === 0) {
+           if(onComplete) onComplete();
+           return;
+        }
+
+        const positions = children.map(child => ({ x: child.offsetLeft, y: child.offsetTop }));
+        
+        // Temporarily clear and re-add to calculate new positions
+        const fragment = document.createDocumentFragment();
+        children.forEach(c => fragment.appendChild(c));
+        grid.innerHTML = ''; // This is where the file list is updated in state
+        grid.appendChild(fragment);
+
+        const newPositions = children.map(child => ({ x: child.offsetLeft, y: child.offsetTop }));
+        
+        children.forEach((child, i) => {
+            const dx = positions[i].x - newPositions[i].x;
+            const dy = positions[i].y - newPositions[i].y;
+            
+            if (dx !== 0 || dy !== 0) {
+                child.style.transform = `translate(${dx}px, ${dy}px)`;
+                child.classList.add('moving');
+                
+                requestAnimationFrame(() => {
+                    child.style.transform = 'translate(0, 0)';
+                });
+                
+                child.addEventListener('transitionend', function onEnd() {
+                    child.removeEventListener('transitionend', onEnd);
+                    child.classList.remove('moving');
+                    completedAnimations++;
+                    if(completedAnimations === children.length && onComplete) {
+                        onComplete();
+                    }
+                });
+            } else {
+                 completedAnimations++;
+            }
+        });
+        if(completedAnimations === children.length && onComplete) {
+           onComplete();
+        }
+    };
+
+
+    // --- JOB Implementations ---
+
+    // JOB① Generator
+    const runGenerator = async () => {
+        if (!state.isRunning) return;
+
+        // Wait phase
+        if (state.waitIndicators.generator) tempArea.removeChild(state.waitIndicators.generator);
+        state.waitIndicators.generator = createWaitIndicator();
+        tempArea.appendChild(state.waitIndicators.generator);
+
+        const waitTime = getRandomTime(3, 5);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+
+        if (!state.isRunning) {
+            if (state.waitIndicators.generator) {
+                tempArea.removeChild(state.waitIndicators.generator);
+                state.waitIndicators.generator = null;
+            }
+            return;
+        }
+        if (state.waitIndicators.generator) {
+           tempArea.removeChild(state.waitIndicators.generator);
+           state.waitIndicators.generator = null;
+        }
+
+        // Generation phase
+        if (state.files.temp.length < 6) {
+            const baseName = createFileName();
+            const mainFile = { id: `file-${Date.now()}`, name: baseName, type: 'bin' };
+            
+            const generationTime = state.isOkFileEnabled ? 10 : getRandomTime(3, 5);
+
+            const tempIcon = createFileIcon(mainFile);
+            const progressRing = createProgressRing();
+            tempIcon.appendChild(progressRing);
+            tempGrid.appendChild(tempIcon);
+            
+            let progress = 0;
+            const interval = 50 / getSpeed();
+            const steps = generationTime / interval;
+            
+            for (let i = 0; i <= steps; i++) {
+                if(!state.isRunning) {
+                    tempIcon.remove();
+                    break;
+                }
+                progress = (i / steps) * 100;
+                updateProgress(tempIcon, progress);
+                await new Promise(r => setTimeout(r, interval));
+            }
+            tempIcon.remove();
+            
+            if(state.isRunning) {
+                state.files.temp.push(mainFile);
+                if (state.isOkFileEnabled) {
+                    const okFile = { id: `file-${Date.now()}-ok`, name: baseName.replace('.bin', '.ok'), type: 'ok' };
+                    state.files.temp.push(okFile);
+                }
+                render();
+                // Immediately start uploader for the newly created files
+                runUploader(mainFile);
+            }
+        }
+        
+        if (state.isRunning) {
+            state.jobTimers.generator = setTimeout(runGenerator, 0);
+        }
+    };
+
+    // JOB② Uploader
+    const runUploader = async (fileToUpload) => {
+        if (state.files.upload.length >= 6) return;
+
+        const isOk = state.isOkFileEnabled;
+        const copyTime = isOk ? 10 : getRandomTime(5, 9);
+        
+        // Find .ok file if it exists
+        const okFile = isOk ? state.files.temp.find(f => f.name.startsWith(fileToUpload.name.split('.')[0]) && f.type === 'ok') : null;
+
+        // Create placeholders in upload
+        const uploadFile = { ...fileToUpload, isCopying: true, progress: 0 };
+        state.files.upload.push(uploadFile);
+        if (okFile) {
+            const uploadOkFile = { ...okFile, isCopying: true, progress: isOk ? 100:0 };
+            state.files.upload.push(uploadOkFile);
+        }
+        render();
+
+        const uploadFileIcon = document.getElementById(uploadFile.id);
+        if (!uploadFileIcon) return;
+
+        // Animate copy progress
+        let progress = 0;
+        const interval = 50 / getSpeed();
+        const steps = copyTime / interval;
+        
+        for (let i = 0; i <= steps; i++) {
+            if(!state.isRunning) break;
+            progress = Math.min((i / steps) * 100, 100);
+            uploadFile.progress = progress;
+            updateProgress(uploadFileIcon, progress);
+            await new Promise(r => setTimeout(r, interval));
+        }
+
+        if(!state.isRunning) return;
+
+        // Finalize copy
+        uploadFile.isCopying = false;
+        uploadFile.progress = 100;
+        if(okFile) {
+            const okUpload = state.files.upload.find(f => f.id === okFile.id);
+            if(okUpload) {
+                 okUpload.isCopying = false;
+                 okUpload.progress = 100;
+            }
+        }
+
+        // Remove from temp
+        state.files.temp = state.files.temp.filter(f => f.id !== fileToUpload.id && (!okFile || f.id !== okFile.id));
+
+        const tempGridBeforeAnimation = Array.from(tempGrid.children).map(c => c.id);
+        render(); // Re-render to show final state in upload and remove from temp logically
+        
+        // After render, animate the temp grid closing the gap
+        const currentTempGrid = document.getElementById('temp-grid');
+        const childrenToAnimate = tempGridBeforeAnimation.map(id => document.getElementById(id)).filter(Boolean);
+
+        animateFileMove(currentTempGrid);
+    };
+
+    // JOB③ Projector
+    const runProjector = async () => {
+        if (!state.isRunning) return;
+        
+        // Wait phase
+        if (state.waitIndicators.projector) displayArea.removeChild(state.waitIndicators.projector);
+        state.waitIndicators.projector = createWaitIndicator(true);
+        displayContainer.appendChild(state.waitIndicators.projector);
+
+        const waitTime = 3000 / getSpeed();
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+
+        if (!state.isRunning) {
+            if (state.waitIndicators.projector) {
+                try { displayContainer.removeChild(state.waitIndicators.projector); } catch (e) {}
+                state.waitIndicators.projector = null;
+            }
+            return;
+        }
+
+        if (state.waitIndicators.projector) {
+            try { displayContainer.removeChild(state.waitIndicators.projector); } catch(e) {}
+            state.waitIndicators.projector = null;
+        }
+        
+        // Find oldest .bin file that is NOT being copied
+        const targetFile = state.files.upload
+            .filter(f => f.type === 'bin' && !f.isCopying)
+            .sort((a, b) => a.id.localeCompare(b.id))[0];
+
+        if (targetFile) {
+            // Display
+            state.files.display = { ...targetFile };
+
+            // Cleanup upload
+            const fileBaseName = targetFile.name.split('.')[0];
+            const oldFiles = state.files.upload.filter(f => f.id <= targetFile.id);
+            state.files.upload = state.files.upload.filter(f => !oldFiles.find(old => old.id === f.id));
+            
+            render();
+            animateFileMove(uploadGrid);
+            
+        } else {
+             state.files.display = null;
+             render();
+        }
+        
+        if (state.isRunning) {
+            state.jobTimers.projector = setTimeout(runProjector, 0);
+        }
+    };
+
+    // --- Event Listeners ---
+    okFileCheckbox.addEventListener('change', (e) => {
+        state.isOkFileEnabled = e.target.checked;
+    });
+
+    speedSlider.addEventListener('input', (e) => {
+        state.animationSpeed = parseFloat(e.target.value);
+        speedValue.textContent = `${state.animationSpeed.toFixed(1)}x`;
+        document.documentElement.style.setProperty('--speed-multiplier', state.animationSpeed);
+    });
+
+    startBtn.addEventListener('click', () => {
+        if (state.isRunning) return;
+        state.isRunning = true;
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        
+        state.jobTimers.generator = setTimeout(runGenerator, 0);
+        state.jobTimers.projector = setTimeout(runProjector, 0);
+    });
+
+    stopBtn.addEventListener('click', () => {
+        if (!state.isRunning) return;
+        state.isRunning = false;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+
+        clearTimeout(state.jobTimers.generator);
+        clearTimeout(state.jobTimers.projector);
+
+        if(state.waitIndicators.generator && state.waitIndicators.generator.parentNode) {
+            state.waitIndicators.generator.parentNode.removeChild(state.waitIndicators.generator);
+            state.waitIndicators.generator = null;
+        }
+        if(state.waitIndicators.projector && state.waitIndicators.projector.parentNode) {
+            state.waitIndicators.projector.parentNode.removeChild(state.waitIndicators.projector);
+            state.waitIndicators.projector = null;
+        }
+    });
+
+    resetBtn.addEventListener('click', () => {
+        stopBtn.click(); // Stop all jobs first
+        state.files.temp = [];
+        state.files.upload = [];
+        state.files.display = null;
+        render();
+    });
+
+    // --- Initial Setup ---
+    stopBtn.disabled = true;
+    render();
+});
+</script>
+
+</body>
+</html>
