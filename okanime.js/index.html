@@ -3,7 +3,13 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>okanime.js</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
         <style type="text/css">
+            body {
+                font-family: "Noto Sans JP", "Noto Color Emoji", sans-serif;
+            }
             div#root {
             }
             div#warp {
@@ -76,6 +82,14 @@
                 color: #A0A0A0;
                 padding: 5px;
             }
+            textarea.logarea {
+                width:100%;
+                resize: none;
+                overflow: scroll;
+            }
+            textarea.logarea:read-only {
+                color: #999999;
+            }
             div.fileContainer {
                 position: relative;
                 height: 500px;
@@ -145,14 +159,18 @@
                     document.querySelector('#buttonStart').addEventListener('click', function() {
                         massageLog('clicked start button.');
                         isPaused = false;
-                    })
+                    });
                     document.querySelector('#buttonStop').addEventListener('click', function() {
                         massageLog('clicked stop button.');
                         isPaused = true;
-                    })
+                    });
                     document.querySelector('#buttonReset').addEventListener('click', function() {
                         massageLog('clicked reset button.');
                     })
+                    document.querySelector('#buttonRemoveATmpFile').addEventListener('click', function() {
+                        document.querySelector('div#folderTmp > div')?.remove();
+                        massageLog('removed a tmp file..');
+                    });
                 })();
 
                 /**
@@ -166,7 +184,68 @@
 
                     // generator
                     (function() {
-                        
+                        const timestamp = (() => {
+                            const d = new Date();
+                            return (('' + d.getFullYear())
+                              + ('0' + (d.getMonth() + 1)).slice(-2)
+                              + ('0' + (d.getDate())).slice(-2)
+                              + '_'
+                              + ('0' + (d.getHours())).slice(-2)
+                              + ('0' + (d.getMinutes())).slice(-2)
+                              + ('0' + (d.getSeconds())).slice(-2)
+                            );
+                            
+                        })();
+                        document.querySelectorAll('div#folderTmp').forEach(function(divFolder) {
+                            const divFile = divFolder.querySelector(':scope > div[data-gen-cur]');
+                            if(!divFile) {
+                                //wait
+                                const max = getValue(divFolder.getAttribute('data-wait-max'), 0, false);
+                                const count = getValue(divFolder.getAttribute('data-wait-count'), 0, false);
+                                const newCount = Math.max(count - delta, 0);
+                                if(newCount != 0) {
+                                    // wait.
+                                    divFolder.setAttribute('data-wait-count', newCount);
+                                } else {
+                                    // start generate.
+                                    const newNode = document.querySelector('div#file-obj-template').cloneNode(true);
+                                    const max = 4000 + (Math.random() * 2000);
+                                    newNode.removeAttribute('id');
+                                    newNode.setAttribute('data-gen-cur', 'data-gen-cur');
+                                    newNode.setAttribute('data-type', 'normal');
+                                    newNode.setAttribute('data-gen-count', max);
+                                    newNode.setAttribute('data-gen-max', max);
+                                    newNode.classList.add('fileObject');
+                                    divFolder.appendChild(newNode);
+                                    divFolder.removeAttribute('data-gen-max');
+                                    divFolder.removeAttribute('data-gen-count');
+                                    massageGeneratorLog(`start generate ${timestamp}`);
+                                }
+                            } else {
+                                // generating...
+                                const max = getValue(divFile.getAttribute('data-gen-max'), 0, false);
+                                const count = getValue(divFile.getAttribute('data-gen-count'), 0, false);
+                                const newCount = Math.max(count - delta, 0);
+                                if(newCount != 0) {
+                                    // wait.
+                                    divFile.setAttribute('data-gen-count', newCount);
+                                } else {
+                                    const max = 4000 + (Math.random() * 2000);
+                                    divFile.removeAttribute('data-gen-cur');
+                                    divFile.removeAttribute('data-gen-count');
+                                    divFile.removeAttribute('data-gen-max');
+                                    divFolder.setAttribute('data-wait-count', max);
+                                    divFolder.setAttribute('data-wait-max', max);
+                                }
+                            }
+                        });
+
+                        /**
+                         * @param str
+                         */
+                        function massageGeneratorLog(str) {
+                            massageToTextarea('logGenerator', str);
+                        }
                     })();
 
                     // projector
@@ -180,7 +259,7 @@
                                 setRingProgress(circle, (max - newCount) / max);
                                 circle.setAttribute('data-count', newCount);
                                 if(newCount == 0) {
-                                    massageLog('projection!');
+                                    massageProjectorLog('projection!');
                                 }
                             } else {
                                 const max = 4000 + (Math.random() * 2000);
@@ -188,6 +267,13 @@
                                 circle.setAttribute('data-count', max);
                                 circle.setAttribute('data-max', max);
                             }
+                        }
+
+                        /**
+                         * @param str
+                         */
+                        function massageProjectorLog(str) {
+                            massageToTextarea('logProjector', str);
                         }
                     })();
 
@@ -201,17 +287,6 @@
 
                                 const count = divFile.getAttribute('data-count');
                                 if(divFile.getAttribute('data-count') !== 0) {
-                                    const getValue = (a, b, isForce) => {
-                                        if(isForce) {
-                                            return b
-                                        } else if(a) {
-                                            return a;
-                                        } else if(a == 0) {
-                                            return a;
-                                        } else {
-                                            return b;
-                                        }
-                                    };
                                     const isSame = ((divFile.getAttribute('data-index') || -1) == index);
                                     const curCount = isSame ? count : MAX_COUNT;
                                     const startPosX = getValue(divFile.getAttribute('data-start-pos-x'), divFile.offsetLeft, !isSame);
@@ -262,8 +337,33 @@
                  * @param str
                  */
                 function massageLog(str) {
+                    massageToTextarea('logSettings', str);
+                }
+
+
+                /**
+                 * @param a
+                 * @param b
+                 * @param isForceB
+                 */
+                function getValue(a, b, isForceB) {
+                    if(isForceB) {
+                        return b
+                    } else if(a) {
+                        return a;
+                    } else if(a == 0) {
+                        return a;
+                    } else {
+                        return b;
+                    }
+                }
+
+                /**
+                 * @param str
+                 */
+                function massageToTextarea(id, str) {
                     const timestamp = dateString();
-                    document.querySelectorAll('#logSettings').forEach(function(logarea) {
+                    document.querySelectorAll(`div#${id}`).forEach(function(logarea) {
                         const div = document.createElement('div');
                         div.textContent = `[${timestamp}] ${str}`;
                         while(logarea.childNodes.length >= 100) {
@@ -271,7 +371,11 @@
                         }
                         logarea.prepend(div);
                     });
+                    document.querySelectorAll(`textarea#${id}`).forEach(function(logarea) {
+                        logarea.value = [`[${timestamp}] ${str}`, ...logarea.value.split('\n')].slice(0, 100).join('\n')
+                    });
                 }
+
 
                 /**
                  * ring progress
@@ -309,7 +413,10 @@
                             </div>
                         </div>
                         <div class="log">
-                            <div id="logSettings" class="texarea"></div>
+                            <textarea id="logSettings" class="logarea" rows="5" tabindex="-1" readonly></textarea>
+                        </div>
+                        <div class="log">
+                            <button id="buttonRemoveATmpFile" class="type0">Remove a tmp file.</button>
                         </div>
                     </div>
                 </section>
@@ -327,10 +434,11 @@
                                 <span>📁tmp</span>
                             </div>
                             <div class="log">
-                                <div class="texarea"></div>
+                                <textarea id="logGenerator" class="logarea" rows="5" tabindex="-1" readonly></textarea>
                             </div>
                             <div class="content">
-                                <div class="fileContainer">
+                                <div id="folderTmp" class="fileContainer">
+                                    <!--
                                     <div class="fileObject">🗄️
                                        <svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 100 100" fill="#E0E0FF" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter">
                                          <path d="M14 2H4v20h16V8l-6-6z"></path>
@@ -356,6 +464,7 @@
                                     <div class="fileObject">🗄️</div>
                                     <div class="fileObject">🗄️</div>
                                     <div class="fileObject">🗄️</div>
+                                    -->
                                 </div>
                             </div>
                         </div>
@@ -364,7 +473,7 @@
                                 <span>📁upload</span>
                             </div>
                             <div class="log">
-                                <div class="texarea"></div>
+                                <textarea id="logUploader" class="logarea" rows="5" tabindex="-1" readonly></textarea>
                             </div>
                             <div class="content">
                                 <div class="fileContainer">
@@ -389,7 +498,7 @@
                                 <span>🎦projection</span>
                             </div>
                             <div class="log">
-                                <div class="texarea"></div>
+                                <textarea id="logProjector" class="logarea" rows="5" tabindex="-1" readonly></textarea>
                             </div>
                             <div class="content">
                                 <div>
@@ -400,6 +509,30 @@
                     </div>
                 </section>
                 <div style="height:1000px;">
+                </div>
+            </div>
+        </div>
+        <div>
+            <div id="file-obj-template">
+                <div style="position: relative;">
+                    <div style="position: absolute; top: 0px; left: 0px">
+                        <svg  xmlns="http://www.w3.org/2000/svg" width="160" height="200" viewBox="0 0 160 200" role="img" aria-label="File icon">
+                            <rect x="10" y="10" width="140" height="180" rx="12" ry="12" fill="#f5f7fa" stroke="#c0c6d0" stroke-width="2" />
+                            <path d="M110 10 L150 50 L150 10 Z" fill="#e1e6ef" stroke="#c0c6d0" stroke-width="2" />
+                            <text x="80" y="55" text-anchor="middle" font-size="12" font-weight="bold" fill="#333" font-family="'Noto Sans JP', system-ui, sans-serif">
+                                20260114_042952.bin
+                            </text>
+                            <line x1="30" y1="70" x2="130" y2="70" stroke="#d0d6e0" stroke-width="1" />
+                            <text x="30" y="95" font-size="12" fill="#555" font-family="'Noto Sans JP', system-ui, sans-serif"></text>
+                        </svg>
+                    </div>
+                    <div style="position: absolute; top: 100px; left: 65px">
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="32" height="32" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="#D0D0D0" stroke-width="16" />
+                            <circle class="indicator" cx="60" cy="60" r="50" fill="none" stroke="#3b82f6" stroke-width="16"
+                              stroke-dasharray="314.159" stroke-dashoffset="314.159" stroke-linecap="square" transform="rotate(-90 60 60)" />
+                        </svg>
+                    </div>
                 </div>
             </div>
         </div>
