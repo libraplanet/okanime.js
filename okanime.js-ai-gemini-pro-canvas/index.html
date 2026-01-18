@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,9 +15,18 @@
         }
 
         /* Custom Scrollbar */
-        .panel-content::-webkit-scrollbar { width: 6px; }
-        .panel-content::-webkit-scrollbar-track { background: #f1f1f1; }
-        .panel-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .panel-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .panel-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
 
         /* File Card Container Animation (Entry/Exit) */
         .file-card {
@@ -25,9 +35,9 @@
 
         /* File Icon - Disable transition to allow smooth JS-based opacity updates */
         .file-icon {
-            transition: none !important; 
+            transition: none !important;
         }
-        
+
         /* Ring Indicator - Smooth stroke animation */
         .progress-ring__circle {
             transition: stroke-dashoffset 0.1s linear, stroke 0.3s ease;
@@ -35,18 +45,39 @@
 
         /* Flash Animation */
         @keyframes flash-success {
-            0%, 100% { background-color: rgba(167, 243, 208, 0); }
-            50% { background-color: rgba(167, 243, 208, 0.5); }
-        }
-        @keyframes flash-error {
-            0%, 100% { background-color: rgba(254, 202, 202, 0); }
-            50% { background-color: rgba(254, 202, 202, 0.5); }
-        }
-        .animate-flash-success { animation: flash-success 0.5s ease-out; }
-        .animate-flash-error { animation: flash-error 0.5s ease-out; }
 
+            0%,
+            100% {
+                background-color: rgba(167, 243, 208, 0);
+            }
+
+            50% {
+                background-color: rgba(167, 243, 208, 0.5);
+            }
+        }
+
+        @keyframes flash-error {
+
+            0%,
+            100% {
+                background-color: rgba(254, 202, 202, 0);
+            }
+
+            50% {
+                background-color: rgba(254, 202, 202, 0.5);
+            }
+        }
+
+        .animate-flash-success {
+            animation: flash-success 0.5s ease-out;
+        }
+
+        .animate-flash-error {
+            animation: flash-error 0.5s ease-out;
+        }
     </style>
 </head>
+
 <body class="h-screen flex flex-col text-slate-700">
 
     <!-- Header / Settings -->
@@ -61,30 +92,38 @@
 
             <!-- Controls -->
             <div class="flex items-center gap-6 flex-1 justify-center">
-                <label class="flex items-center cursor-pointer select-none gap-2 bg-slate-100 px-3 py-2 rounded hover:bg-slate-200 transition group z-50">
+                <label
+                    class="flex items-center cursor-pointer select-none gap-2 bg-slate-100 px-3 py-2 rounded hover:bg-slate-200 transition group z-50">
                     <div class="relative">
                         <input type="checkbox" id="chkOkFile" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div
+                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                        </div>
                     </div>
                     <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900">OKファイルを使用</span>
                 </label>
 
                 <div class="flex items-center gap-2 w-48">
                     <i class="fa-solid fa-gauge-high text-slate-400"></i>
-                    <input type="range" id="rngSpeed" min="0.5" max="5.0" step="0.5" value="1.0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                    <input type="range" id="rngSpeed" min="0.5" max="5.0" step="0.5" value="1.0"
+                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
                     <span id="lblSpeed" class="text-xs font-mono w-8 text-right">1.0x</span>
                 </div>
             </div>
 
             <!-- Actions -->
             <div class="flex gap-2">
-                <button id="btnStart" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded shadow transition flex items-center gap-2">
+                <button id="btnStart"
+                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded shadow transition flex items-center gap-2">
                     <i class="fa-solid fa-play"></i> 開始
                 </button>
-                <button id="btnStop" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded shadow transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <button id="btnStop"
+                    class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded shadow transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled>
                     <i class="fa-solid fa-pause"></i> 停止
                 </button>
-                <button id="btnReset" class="bg-slate-500 hover:bg-slate-600 text-white px-4 py-2 rounded shadow transition flex items-center gap-2">
+                <button id="btnReset"
+                    class="bg-slate-500 hover:bg-slate-600 text-white px-4 py-2 rounded shadow transition flex items-center gap-2">
                     <i class="fa-solid fa-rotate-right"></i> リセット
                 </button>
             </div>
@@ -93,22 +132,26 @@
 
     <!-- Main Pane -->
     <div class="flex-1 flex overflow-hidden p-4 gap-4 bg-slate-100">
-        
+
         <!-- [tmp] Region -->
         <div class="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
-            <div class="bg-slate-50 p-3 border-b border-slate-200 flex justify-between items-center sticky top-0 z-10 h-14">
+            <div
+                class="bg-slate-50 p-3 border-b border-slate-200 flex justify-between items-center sticky top-0 z-10 h-14">
                 <span class="font-bold text-slate-600 flex items-center gap-2 whitespace-nowrap text-sm sm:text-base">
                     <i class="fa-regular fa-file-code text-slate-400"></i>
                     <span id="lblGenState">[tmp] 生成</span>
                 </span>
                 <div class="flex items-center gap-2 text-xs w-1/3 max-w-[150px]">
-                    <span id="txtGenStateDetail" class="text-slate-500 font-bold hidden sm:inline text-right flex-1 truncate">待機中</span>
+                    <span id="txtGenStateDetail"
+                        class="text-slate-500 font-bold hidden sm:inline text-right flex-1 truncate">待機中</span>
                     <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden flex-shrink-0">
                         <div class="h-full bg-blue-500 w-0 transition-none" id="progressGen"></div>
                     </div>
                 </div>
             </div>
-            <div id="areaTmp" class="panel-content flex-1 p-4 grid grid-cols-2 lg:grid-cols-3 gap-3 content-start overflow-y-auto"></div>
+            <div id="areaTmp"
+                class="panel-content flex-1 p-4 grid grid-cols-2 lg:grid-cols-3 gap-3 content-start overflow-y-auto">
+            </div>
         </div>
 
         <!-- Arrow -->
@@ -118,12 +161,15 @@
 
         <!-- [upload] Region -->
         <div class="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
-            <div class="bg-slate-50 p-3 border-b border-slate-200 flex justify-between items-center sticky top-0 z-10 h-14">
+            <div
+                class="bg-slate-50 p-3 border-b border-slate-200 flex justify-between items-center sticky top-0 z-10 h-14">
                 <span class="font-bold text-slate-600 flex items-center gap-2 whitespace-nowrap text-sm sm:text-base">
                     <i class="fa-solid fa-upload text-slate-400"></i> [upload] 転送
                 </span>
             </div>
-            <div id="areaUpload" class="panel-content flex-1 p-4 grid grid-cols-2 lg:grid-cols-3 gap-3 content-start overflow-y-auto"></div>
+            <div id="areaUpload"
+                class="panel-content flex-1 p-4 grid grid-cols-2 lg:grid-cols-3 gap-3 content-start overflow-y-auto">
+            </div>
         </div>
 
         <!-- Arrow -->
@@ -132,8 +178,10 @@
         </div>
 
         <!-- [projection] Region -->
-        <div id="containerProj" class="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0 transition-colors duration-300">
-            <div class="bg-slate-50 p-3 border-b border-slate-200 flex justify-between items-center sticky top-0 z-10 h-14">
+        <div id="containerProj"
+            class="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-0 transition-colors duration-300">
+            <div
+                class="bg-slate-50 p-3 border-b border-slate-200 flex justify-between items-center sticky top-0 z-10 h-14">
                 <span class="font-bold text-slate-600 flex items-center gap-2 whitespace-nowrap text-sm sm:text-base">
                     <i class="fa-solid fa-film text-slate-400"></i> [projection] 投写
                 </span>
@@ -144,7 +192,8 @@
                     <span id="txtProjWait" class="text-slate-400 font-mono w-8 text-right">0%</span>
                 </div>
             </div>
-            <div id="areaProj" class="panel-content flex-1 p-4 flex flex-col items-center justify-center gap-4 bg-slate-50/30">
+            <div id="areaProj"
+                class="panel-content flex-1 p-4 flex flex-col items-center justify-start gap-4 bg-slate-50/30">
                 <div id="emptyStateProj" class="text-slate-300 text-center">
                     <i class="fa-solid fa-video-slash text-4xl mb-2"></i>
                     <p class="text-sm">待機中...</p>
@@ -162,29 +211,29 @@
             // Task Timings (ms) base ± variance
             genBinMin: 2000,
             genBinMax: 4000,
-            
+
             transBinMin: 2000,
             transBinMax: 4000,
-            
+
             waitMin: 2000,
             waitMax: 4000,
 
-            instant: 50, 
+            instant: 50,
 
             // 4s ± 1s (3000ms - 5000ms)
-            projIntervalMin: 3000, 
+            projIntervalMin: 3000,
             projIntervalMax: 5000,
         };
 
         // Strict Sequence Phases
         const PHASES = {
-            GEN_BIN:    '生成: 通常',
-            GEN_OK:     '生成: OK',
-            TRANS_BIN:  '転送: 通常',
-            TRANS_OK:   '転送: OK',
-            DEL_BIN:    '削除: 通常',
-            DEL_OK:     '削除: OK',
-            WAIT:       'タスク待機'
+            GEN_BIN: '生成: 通常',
+            GEN_OK: '生成: OK',
+            TRANS_BIN: '転送: 通常',
+            TRANS_OK: '転送: OK',
+            DEL_BIN: '削除: 通常',
+            DEL_OK: '削除: OK',
+            WAIT: 'タスク待機'
         };
 
         /**
@@ -195,22 +244,22 @@
             speed: 1.0,
             useOkFile: false,
             lastFrameTime: 0,
-            
+
             // Task Sequence State
             currentPhase: PHASES.GEN_BIN,
             phaseTimer: 0,
             phaseDuration: 3000,
-            
+
             // Working File IDs for the current cycle
             currentBinId: null,
             currentOkId: null,
-            
+
             // Projector Task
             projTimer: 0,
             projDuration: 5000,
 
             files: [], // All active file objects
-            fileCounter: 0 
+            fileCounter: 0
         };
 
         /**
@@ -223,13 +272,13 @@
             btnStart: document.getElementById('btnStart'),
             btnStop: document.getElementById('btnStop'),
             btnReset: document.getElementById('btnReset'),
-            
+
             areaTmp: document.getElementById('areaTmp'),
             areaUpload: document.getElementById('areaUpload'),
             areaProj: document.getElementById('areaProj'),
             containerProj: document.getElementById('containerProj'),
             emptyStateProj: document.getElementById('emptyStateProj'),
-            
+
             progressGen: document.getElementById('progressGen'),
             txtGenStateDetail: document.getElementById('txtGenStateDetail'),
             progressProj: document.getElementById('progressProj'),
@@ -245,8 +294,8 @@
 
         const generateFileName = () => {
             const now = new Date();
-            const pad = (n, len=2) => String(n).padStart(len, '0');
-            return `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+            const pad = (n, len = 2) => String(n).padStart(len, '0');
+            return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
         };
 
         /**
@@ -272,13 +321,13 @@
             const iconClass = isOk ? 'text-pink-400' : 'text-emerald-500';
             const badgeText = isOk ? 'OK FILE' : 'BIN';
             const badgeClass = isOk ? 'text-pink-400' : 'text-emerald-500';
-            
+
             // Ring Calculation
             const radius = 20;
             const circumference = 2 * Math.PI * radius;
             const offset = circumference - (file.progress / 100) * circumference;
             const ringColor = file.progress >= 100 ? 'text-blue-500' : 'text-slate-300';
-            
+
             // Opacity Calculation (30% -> 100%)
             const opacity = 0.3 + (file.progress / 100) * 0.7;
 
@@ -290,7 +339,7 @@
                             <circle class="text-slate-100" stroke="currentColor" stroke-width="4" fill="transparent" r="20" cx="24" cy="24"/>
                             <circle class="progress-ring__circle ${ringColor}" stroke="currentColor" stroke-width="4" fill="transparent" r="20" cx="24" cy="24" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
                         </svg>
-                        <span class="absolute text-[10px] font-bold text-slate-600 percentage-text">${Math.floor(file.progress)}%</span>
+                        <span class="absolute text-[10px] font-bold text-slate-600 percentage-text z-20">${Math.floor(file.progress)}%</span>
                         <i class="file-icon fa-solid fa-file text-2xl z-10 ${iconClass}" style="opacity: ${opacity}"></i>
                     </div>
                     <div class="w-full text-center overflow-hidden">
@@ -312,14 +361,14 @@
             const opacity = 0.3 + (file.progress / 100) * 0.7;
 
             return `
-                <div class="file-card relative ${bgClass} p-6 rounded-xl border-2 shadow-lg flex flex-col items-center gap-4 select-none w-64 transform transition-all duration-500">
+                <div class="project-item file-card relative ${bgClass} p-6 rounded-xl border-2 shadow-lg flex flex-col items-center gap-4 select-none w-64 transform transition-all duration-500 mb-4">
                     ${isError ? '<div class="absolute -top-3 right-4 bg-red-600 text-white text-xs px-2 py-1 rounded font-bold animate-pulse shadow">BROKEN FILE</div>' : ''}
                     <div class="relative w-32 h-32 flex items-center justify-center">
                         <svg class="progress-ring absolute w-full h-full" style="transform: rotate(-90deg); transform-origin: center;" viewBox="0 0 48 48" width="128" height="128">
                             <circle class="text-slate-100" stroke="currentColor" stroke-width="4" fill="transparent" r="20" cx="24" cy="24"/>
                             <circle class="progress-ring__circle ${ringColor}" stroke="currentColor" stroke-width="4" fill="transparent" r="20" cx="24" cy="24" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
                         </svg>
-                        <span class="absolute text-2xl font-bold text-slate-600">${Math.floor(file.progress)}%</span>
+                        <span class="absolute text-2xl font-bold text-slate-600 z-20">${Math.floor(file.progress)}%</span>
                         <i class="fa-solid fa-file text-6xl z-10 ${iconClass}" style="opacity: ${opacity}"></i>
                     </div>
                     <div class="w-full text-center">
@@ -335,7 +384,7 @@
          */
         const bindEvents = () => {
             els.chkOkFile.addEventListener('change', (e) => state.useOkFile = e.target.checked);
-            
+
             els.rngSpeed.addEventListener('input', (e) => {
                 state.speed = parseFloat(e.target.value);
                 els.lblSpeed.textContent = state.speed.toFixed(1) + 'x';
@@ -345,7 +394,7 @@
                 state.isPlaying = true;
                 els.btnStart.disabled = true;
                 els.btnStop.disabled = false;
-                
+
                 // Initialize Sequence
                 startPhase(PHASES.GEN_BIN);
 
@@ -371,7 +420,7 @@
             state.currentBinId = null;
             state.currentOkId = null;
             state.currentPhase = PHASES.GEN_BIN;
-            
+
             els.btnStart.disabled = false;
             els.btnStop.disabled = true;
             state.useOkFile = els.chkOkFile.checked;
@@ -389,7 +438,7 @@
         };
 
         // --- Sequence Control ---
-        
+
         const startPhase = (phase) => {
             state.currentPhase = phase;
             state.phaseTimer = 0;
@@ -405,7 +454,7 @@
                         startPhase(PHASES.TRANS_BIN);
                         return;
                     }
-                    state.phaseDuration = CONFIG.instant; 
+                    state.phaseDuration = CONFIG.instant;
                     actionGenerateOk();
                     break;
 
@@ -458,13 +507,13 @@
 
         const finishPhase = () => {
             switch (state.currentPhase) {
-                case PHASES.GEN_BIN:    startPhase(PHASES.GEN_OK); break;
-                case PHASES.GEN_OK:     startPhase(PHASES.TRANS_BIN); break;
-                case PHASES.TRANS_BIN:  startPhase(PHASES.TRANS_OK); break;
-                case PHASES.TRANS_OK:   startPhase(PHASES.DEL_BIN); break;
-                case PHASES.DEL_BIN:    startPhase(PHASES.DEL_OK); break;
-                case PHASES.DEL_OK:     startPhase(PHASES.WAIT); break;
-                case PHASES.WAIT:       startPhase(PHASES.GEN_BIN); break;
+                case PHASES.GEN_BIN: startPhase(PHASES.GEN_OK); break;
+                case PHASES.GEN_OK: startPhase(PHASES.TRANS_BIN); break;
+                case PHASES.TRANS_BIN: startPhase(PHASES.TRANS_OK); break;
+                case PHASES.TRANS_OK: startPhase(PHASES.DEL_BIN); break;
+                case PHASES.DEL_BIN: startPhase(PHASES.DEL_OK); break;
+                case PHASES.DEL_OK: startPhase(PHASES.WAIT); break;
+                case PHASES.WAIT: startPhase(PHASES.GEN_BIN); break;
             }
         };
 
@@ -474,7 +523,7 @@
             const baseName = generateFileName();
             state.fileCounter++;
             const binId = `f_${state.fileCounter}_tmp_bin`;
-            
+
             const binFile = new FileEntity(binId, 'bin', `${baseName}.bin`, null, 'tmp');
             state.files.push(binFile);
             state.currentBinId = binId;
@@ -486,14 +535,14 @@
             if (!binFile) return;
 
             const baseName = binFile.name.replace('.bin', '');
-            
+
             state.fileCounter++;
             const okId = `f_${state.fileCounter}_tmp_ok`;
-            
+
             const okFile = new FileEntity(okId, 'ok', `${baseName}.ok`, binFile.id, 'tmp');
             okFile.progress = 100;
-            
-            binFile.pairId = okId; 
+
+            binFile.pairId = okId;
             state.files.push(okFile);
             state.currentOkId = okId;
             addFileToDOM(okFile, els.areaTmp);
@@ -506,7 +555,7 @@
             const uploadId = tmpFile.id.replace('_tmp_', '_upload_');
             const uploadFile = new FileEntity(uploadId, 'bin', tmpFile.name, null, 'upload');
             if (tmpFile.pairId) uploadFile.pairId = tmpFile.pairId.replace('_tmp_', '_upload_');
-            
+
             state.files.push(uploadFile);
             addFileToDOM(uploadFile, els.areaUpload);
         };
@@ -518,7 +567,7 @@
             const uploadId = tmpFile.id.replace('_tmp_', '_upload_');
             const uploadFile = new FileEntity(uploadId, 'ok', tmpFile.name, null, 'upload');
             uploadFile.progress = 100;
-            
+
             if (tmpFile.pairId) uploadFile.pairId = tmpFile.pairId.replace('_tmp_', '_upload_');
 
             state.files.push(uploadFile);
@@ -544,7 +593,7 @@
         const updatePhaseUI = () => {
             const txt = state.currentPhase;
             let color = 'bg-slate-400';
-            
+
             if (state.currentPhase.includes('生成')) color = 'bg-blue-500';
             if (state.currentPhase.includes('転送')) color = 'bg-emerald-500';
             if (state.currentPhase.includes('削除')) color = 'bg-red-400';
@@ -565,10 +614,10 @@
             // If timer exceeded
             if (state.projTimer >= state.projDuration) {
                 const target = findProjectableFile();
-                
+
                 if (target) {
                     projectFile(target);
-                } 
+                }
                 // else: Do nothing (Skip/Tear)
 
                 // ALWAYS Reset timer to simulate fixed sync interval
@@ -595,7 +644,7 @@
                     const okFile = completedOkFiles[0];
                     const binFile = uploadFiles.find(f => f.id === okFile.pairId);
                     if (binFile) {
-                        removeFile(okFile); 
+                        removeFile(okFile);
                         return binFile;
                     }
                 }
@@ -608,7 +657,7 @@
                         const idB = parseInt(b.id.split('_')[1]);
                         return idA - idB;
                     });
-                
+
                 if (binFiles.length > 0) return binFiles[0];
             }
             return null;
@@ -617,11 +666,11 @@
         const projectFile = (file) => {
             els.containerProj.classList.remove('animate-flash-success', 'animate-flash-error');
             void els.containerProj.offsetWidth;
-            
+
             const isComplete = file.progress >= 99.9;
             els.containerProj.classList.add(isComplete ? 'animate-flash-success' : 'animate-flash-error');
 
-            els.areaProj.innerHTML = '';
+            // els.areaProj.innerHTML = ''; // History logic change: Don't clear
             els.emptyStateProj.style.display = 'none';
 
             removeFile(file);
@@ -629,7 +678,17 @@
             const projHtml = createProjectedHTML(file, isComplete);
             const wrapper = document.createElement('div');
             wrapper.innerHTML = projHtml;
-            els.areaProj.appendChild(wrapper.firstElementChild);
+            const newEl = wrapper.firstElementChild;
+
+            // Prepend new item
+            els.areaProj.insertBefore(newEl, els.areaProj.firstChild);
+
+            // History Management: Keep only latest 3
+            const items = els.areaProj.querySelectorAll('.project-item');
+            if (items.length > 3) {
+                // Remove the last one (oldest)
+                items[items.length - 1].remove();
+            }
         };
 
         const removeFile = (file) => {
@@ -648,12 +707,12 @@
             const wrapper = document.createElement('div');
             wrapper.innerHTML = html;
             const el = wrapper.firstElementChild;
-            
+
             // Initial states
             el.style.opacity = '0';
             el.style.transform = 'scale(0.8)';
             container.appendChild(el);
-            
+
             // Set initial opacity based on current progress
             updateFileDOM(file);
 
@@ -684,7 +743,7 @@
                 if (file.progress >= 99.9) circle.classList.replace('text-slate-300', 'text-blue-500');
             }
             if (pctText) pctText.textContent = Math.floor(file.progress) + '%';
-            
+
             // Icon Opacity: 30% -> 100%
             // Force browser to paint by setting directly style
             const opacity = 0.3 + (file.progress / 100) * 0.7;
@@ -701,10 +760,10 @@
                 const dt = rawDt * state.speed;
 
                 state.phaseTimer += dt;
-                
+
                 let pct = (state.phaseTimer / state.phaseDuration) * 100;
                 if (pct > 100) pct = 100;
-                
+
                 els.progressGen.style.width = `${pct}%`;
 
                 updatePhaseLoop(dt, pct);
@@ -724,4 +783,5 @@
 
     </script>
 </body>
+
 </html>
